@@ -1,0 +1,78 @@
+﻿@model ModelForView
+
+
+<div class="card bg-dark myForm overflow-auto">
+    <div class="card-header d-flex justify-content-between">
+        @if (User.Identity.IsAuthenticated)
+        {
+            if (Model.User.JiraAccountId is not null)
+            {
+                <div>Your jira account</div>
+                var url = $"https://bobur-jr.atlassian.net/secure/ViewProfile.jspa?accountId={Model.User.JiraAccountId}";
+
+                <a href="@url">Profile link</a>
+            }else{
+                <div>You do not have jira account yet.</div>
+                <a asp-controller="Jira" asp-action="CreateJiraUser" class="btn btn-outline-primary">Create account</a>
+            }
+        }
+    </div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Url</th>
+                <th>Reporter</th>
+                <th>Summary</th>
+                <th>Collection</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (var i = 0; i < ViewBag.Tickets.Count; i++)
+            {
+                <tr>
+                    <td>@((ViewBag.CurrentPage - 1) * 10 + i + 1)</td>
+                    <td>
+                        <a href="@ViewBag.Tickets[i].Url">
+                            @(((string)ViewBag.Tickets[i].Url).Split("/").Last())
+                        </a>
+                    </td>
+                    <td>
+                        @if (ViewBag.Tickets[i].AssigneeId is null)
+                        {
+                            <span> - </span>
+                        }
+                        else
+                        {
+                            var assignerUrl = $"https://bobur-jr.atlassian.net/secure/ViewProfile.jspa?accountId={ViewBag.Tickets[i].AssigneeId}";
+
+                            <a href="@assignerUrl">Reporter</a>
+                        }
+                    </td>
+                    <td>@ViewBag.Tickets[i].Summary</td>
+                    <td>@ViewBag.Tickets[i].Collection</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <div class="card-footer d-flex justify-content-center">
+        @if (ViewBag.CurrentPage > 1)
+        {
+            <a asp-controller="jira" class="btn border text-secondary" asp-action="get" asp-route-currentPage="@(ViewBag.CurrentPage - 1)">Prev</a>
+        }
+        else
+        {
+            <button disabled class="btn">Prev</button>
+        }
+        <span class="p-2 px-4 text-secondary">@ViewBag.CurrentPage</span>
+        @if (ViewBag.IsThereAnyPage)
+        {
+            <a asp-controller="jira" asp-action="get" asp-route-currentPage="@(ViewBag.CurrentPage + 1)" class="btn border text-secondary">Next</a>
+        }
+        else
+        {
+            <button disabled class="btn">Next</button>
+        }
+
+    </div>
+</div>

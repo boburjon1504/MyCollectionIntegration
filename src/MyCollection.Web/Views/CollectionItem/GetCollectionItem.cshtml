@@ -1,0 +1,100 @@
+﻿@model ModelForView
+
+<div class="d-flex flex-column">
+    <partial name="~/Views/CollectionItem/ItemCard.cshtml" model="@ViewBag.Item"></partial>
+
+    <div class="card text-center bg-dark myForm d-flex flex-column" style="height:800px">
+        <div class="card-header fw-bolder ">
+            Comments
+        </div>
+        <div class="card-body p-0 d-flex flex-column overflow-auto" id="messageBox">
+            @if (ViewBag.Item.Comments.Count == 0)
+            {
+                <p>No comments yet</p>
+            }
+            else
+            {
+                @for (var i = 0; i < ViewBag.Item.Comments.Count; i++)
+                {
+                    <div class="d-flex p-2 border-bottom position-relative">
+                        <div class="position-absolute d-flex gap-1" style="top:3px;left:68px">
+                            <a class="text-secondary userInput card-link p-0 bg-transparent"
+                               asp-controller="Account"
+                               asp-action="Profile"
+                               asp-route-userName="@ViewBag.Item.Comments[i].Sender.UserName">@ViewBag.Item.Comments[i].Sender.UserName</a>
+                            <p class="text-secondary"> • @ViewBag.Item.Comments[i].SendAt.ToString("dd.MM.yyyy")</p>
+                        </div>
+                        @if (ViewBag.Item.Comments[i].Sender.ImgPath is null)
+                        {
+                            <img src="/Images/github.jpg" class="rounded-circle" style="height:45px;width:45px" />
+                        }
+                        else
+                        {
+                            <img src="@ViewBag.Item.Comments[i].Sender.ImgPath" class="rounded-circle" style="height:45px;width:45px" />
+
+                        }
+                        <p class="text-start p-3 mt-2">@ViewBag.Item.Comments[i].Message</p>
+                    </div>
+                }
+            }
+        </div>
+        <div class="card-footer text-body-secondary d-flex gap-3">
+            <input type="text" id="message" placeholder="Type message" class="form-control bg-dark text-white userInput " />
+            <button type="button" id="sendButton" class="btn btn-outline-success">Send</button>
+        </div>
+    </div>
+</div>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
+<script src="~/js/mySignalr.js"></script>
+@section Scripts {
+    <script>
+        document.getElementById("likeLink").addEventListener("click", () => {
+            if (`@User.Identity.IsAuthenticated` === 'True') {
+                var userId = `@Model.User.Id`
+                var itemId = `@ViewBag.Item.Id`;
+                var likesCount = document.getElementById("likeCount")
+
+                $.ajax({
+                    url: `/collectionitem/likeitem`,
+                    data: {
+                        userId: userId, itemId: itemId
+                    },
+                    type: 'post',
+                    success: function (data) {
+                        var like = document.getElementById("likeSvg")
+                        if (data > parseInt(likesCount.textContent)) {
+                            like.classList.remove("text-secondary")
+                            like.classList.add("text-danger")
+                        } else {
+                            like.classList.remove("text-danger")
+                            like.classList.add("text-secondary")
+                        }
+
+                        likesCount.textContent = data
+                    },
+                    error: function (jqxhr, textstatus, errorthrown) {
+                        console.error('error loading users:', textstatus, errorthrown);
+
+                    }
+                });
+            }
+        })
+
+        $(document).ready(function () {
+            var userMode = `@Model.User.Mode`
+            console.log(userMode)
+            if (userMode === 'light') {
+                changeModeToLight()
+            } else {
+                changeModeToDark();
+            }
+            const myDiv = document.getElementById('messageBox');
+            setTimeout(function () {
+                myDiv.scrollTop = myDiv.scrollHeight;
+            }, 10);
+        })
+    </script>
+}

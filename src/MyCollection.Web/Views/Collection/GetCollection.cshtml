@@ -1,0 +1,164 @@
+﻿@using MyCollection.Domain.Enums
+@using System.Security.Claims
+@model ModelForView
+
+
+<div class="d-flex flex-column">
+    <div class="card mt-4 mb-4 bg-dark myForm">
+        <div class="row g-0">
+            <div class="col-md-4">
+                <img src="@ViewBag.Collection.ImgPath" class="img-fluid rounded-start" alt="...">
+            </div>
+            <div class="col-md-8">
+                <div class="card-body">
+                    <div class="card-title d-flex justify-content-between border-bottom align-items-center">
+                        <p class="fs-4"> @ViewBag.Collection.Name</p>
+                        <div class="d-flex justify-content-center gap-2">Type <p class="border rounded-3 px-2">@ViewBag.Collection.Type.ToString()</p></div>
+                        <div class="d-flex gap-3 justify-content-center align-items-center">
+                            <p class="text-center fs-5">Owner</p>
+                            <a class="d-flex gap-2 justify-content-center border rounded-3 align-items-center" asp-controller="Account" asp-action="Profile" asp-route-userName="@ViewBag.Collection.Owner.UserName">
+                                @if (ViewBag.Collection.Owner.ImgPath is null)
+                                {
+                                    <img src="/Images/github.jpg" class="rounded-circle" style="width:40px;height:40px" />
+                                }
+                                else
+                                {
+                                    <img src="@ViewBag.Collection.Owner.ImgPath" class="rounded-circle" style="width:50px;height:50px" />
+                                }
+                                @ViewBag.Collection.Owner.UserName
+                            </a>
+                        </div>
+                    </div>
+                    <div>
+                        <p>Description</p>
+                        @(Html.Raw(ViewBag.Collection.Description))
+                    </div>
+                    <div class="card-text d-flex justify-content-between border-top">
+                        <p>Created date</p>
+                        <small class="text-secondary">@ViewBag.Collection.CreatedDate.ToString("dd MMM yyyy")</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card text-center bg-dark myForm w-100">
+        <div class="card-header fw-bolder fs-4 d-flex justify-content-center justify-content-lg-between justify-content-md-between">
+            <p class="fs-5 m-0 d-none d-md-block d-lg-block">Collection Items</p>
+            <form>
+                @{
+                    var searchText = "";
+                }
+                <div class="d-flex gap-3 justify-content-start">
+                    <input type="search" class="form-control bg-dark text-white userInput" id="itemsSearch" asp-for="@searchText" placeholder="Search" />
+                    <button type="submit" class="btn btn-outline-success" asp-controller="Search" asp-action="Search" asp-route-searchText="@searchText">Search</button>
+                    @if (Context.User.Identity.IsAuthenticated && (
+                    Context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role).Value.Equals(Role.Admin.ToString())
+                    || Context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value == Model.User.Id.ToString()))
+                    {
+                        <button type="button" id="create" class="btn btn-success">
+                            Create
+                        </button>
+                    }
+                </div>
+            </form>
+        </div>
+        <div class="card-body">
+            @if (ViewBag.Collection.Items.Count == 0)
+            {
+                <div class="d-flex flex-column justify-content-center align-items-center p-5">
+                    <p class="fw-bold p-0 m-0">No items yet. </p>
+                </div>
+            }
+            else
+            {
+                <table class="table">
+                    <thead class="text-center">
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Created date</th>
+                            <th>Likes</th>
+                            <th>Comments</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-center">
+                        @for (var i = 0; i < ViewBag.Collection.Items.Count; i++)
+                        {
+                            <tr>
+                                <td>@(i + 1)</td>
+                                <td>
+                                    <a asp-controller="CollectionItem" asp-action="GetCollectionItem"
+                                       asp-route-userName="@ViewBag.Collection.Owner.UserName"
+                                       asp-route-collectionName="@ViewBag.Collection.Name"
+                                       asp-route-itemName="@ViewBag.Collection.Items[i].Name">@ViewBag.Collection.Items[i].Name</a>
+                                </td>
+                                <td>@ViewBag.Collection.Items[i].CreatedDate.ToString("dd MMM yyy")</td>
+                                <td>@ViewBag.Collection.Items[i].LikesCount</td>
+                                <td>@ViewBag.Collection.Items[i].CommentsCount</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+        <div class="card-footer text-body-secondary">
+            2 days ago
+        </div>
+    </div>
+</div>
+
+@{
+    var newItem = new CollectionItem
+            {
+                Collection = ViewBag.Collection
+            };
+}
+<partial name="~/Views/CollectionItem/Create.cshtml" model="newItem"></partial>
+
+<div class="modal fade" id="warning" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark myForm">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Info</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body fs-6">
+                To create content, please log in or sign up.
+            </div>
+            <div class="modal-footer d-flex justify-content-center">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Ok</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+
+<script>
+    var isAuthonticated = `@User.Identity.IsAuthenticated`
+    if (isAuthonticated === 'True') {
+        document.getElementById('create').addEventListener("click", () => {
+
+            $("#createItem").modal('show')
+
+        })
+    }
+</script>
+@section Scripts {
+    <script>
+        console.log("ishladi")
+        $(document).ready(function () {
+            var userMode = `@Model.User.Mode`
+            console.log(userMode)
+            if (userMode === 'light') {
+                changeModeToLight()
+            } else {
+                changeModeToDark();
+            }
+
+        })
+    </script>
+}

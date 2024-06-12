@@ -1,0 +1,42 @@
+﻿@model ModelForView
+@{
+    var ticket = new JiraTicket();
+}
+<div class="d-flex justify-content-center">
+    <div class="card myForm bg-dark p-3">
+        <div class="card-title fs-4">
+            Create ticket
+        </div>
+        <form method="post">
+            <div class="card-body">
+                <div class="mb-3">
+                    <label asp-for="@ticket.Summary"></label>
+                    <input asp-for="@ticket.Summary" class="form-control userInput bg-dark text-white" />
+                </div>
+                <div>
+                    <label asp-for="@ticket.Description"></label>
+                    <input asp-for="@ticket.Description" class="form-control userInput bg-dark text-white" />
+                    <input asp-for="@ticket.UserId" value="@Model.User.Id" hidden class="form-control userInput bg-dark text-white" />
+                </div>
+                <div>
+                    <label asp-for="@ticket.Status"></label>
+                    <select class="form-select bg-dark text-white userInput" asp-for="@ticket.Status" asp-items="Html.GetEnumSelectList<TicketStatus>()">
+                        <option value="">Select status</option>
+                    </select>
+                </div>
+                <div>
+                    <label asp-for="@ticket.Collection"></label>
+                    <select class="form-select bg-dark text-white userInput" asp-for="@ticket.Collection">
+                        @foreach(var collection in ViewBag.Collections)
+                        {
+                            <option>@collection.Name</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="submit" asp-controller="Jira" asp-action="create" class="btn btn-primary">Create</button>
+            </div>
+        </form>
+    </div>
+</div>
